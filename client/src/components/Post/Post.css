@@ -1,0 +1,24 @@
+.post {
+	border: 5px rgb(51, 51, 51) solid;
+	border-radius: 10px;
+	width: 50%;
+	margin: 5px auto;
+}
+
+.post .username {
+	border-bottom: 4px rgb(95, 91, 91) solid;
+	padding: 5px;
+}
+
+.post .username h1 {
+	margin-right: 900px;
+}
+
+.post .text {
+	padding: 40px;
+	border-bottom: 4px rgb(95, 91, 91) solid;
+}
+
+.post .icons {
+	padding: 10px;
+}
