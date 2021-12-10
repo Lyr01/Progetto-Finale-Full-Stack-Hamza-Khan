@@ -8,6 +8,10 @@ import Login from '../Login/Login';
 import './HomePage.css';
 import axios from 'axios';
 
+// Custom Hook
+import useTokenRetriver from '../../utils/tokenRetriver';
+import useUsernameRetriver from '../../utils/usernameRetriver';
+
 function HomePage() {
     const [isOpen, setIsOpen] = useState(false);
     const [isLogged, setIsLogged] = useState(true);
@@ -15,12 +19,15 @@ function HomePage() {
     const [listOfPosts, setListOfPosts] = useState([]);
     const [listOfUsers, setListOfUsers] = useState([]);
     
+    const token = useTokenRetriver();
+    const userName = useUsernameRetriver();
+
     let navigate = useNavigate();
 
     let state;
     
     const togglePopup = () => {
-        if (localStorage.getItem("accessToken")) {
+        if (token) {
           setIsOpen(!isOpen);
         } else {
           setIsLogged(!isLogged);
@@ -37,23 +44,28 @@ function HomePage() {
       }, []);
 
       const onSubmit = () => {
-        const username = localStorage.getItem("username");
-        const formData = { "text": text, "username": username };
+        const formData = { "text": text};
 
-        axios.post("http://localhost:8080/api/post", formData)
+        axios.post("http://localhost:8080/api/post", formData, {
+          headers: { accessToken: token },
+        })
         .then((res) => {window.location.reload(true)})
       }
 
       const onDelete = (postid) => {
-        axios.delete(`http://localhost:8080/api/post/${postid}`);
+        axios.delete(`http://localhost:8080/api/post/${postid}`, {
+          headers: { accessToken: token },
+        });
         window.location.reload(true);
     }
 
       const LikeOrUnlike = (post_id) => {
-        if (localStorage.getItem("accessToken")) {
-          const username = localStorage.getItem("username");
+        if (token) {
+          const username = userName;
           const formData = {post_id: post_id, username: username};
-          axios.post("http://localhost:8080/api/likes", formData)
+          axios.post("http://localhost:8080/api/likes", formData, {
+            headers: { accessToken: token },
+          })
           .then((response)=> {
             console.log(response.data)
             setListOfPosts(listOfPosts.map((post) => {
@@ -78,10 +90,12 @@ function HomePage() {
       }
 
       const DislikeOrUndislike = (post_id) => {
-        if (localStorage.getItem("accessToken")) {
-          const username = localStorage.getItem("username");
+        if (token) {
+          const username = userName;
           const formData = {post_id: post_id, username: username};
-          axios.post("http://localhost:8080/api/dislikes", formData)
+          axios.post("http://localhost:8080/api/dislikes", formData, {
+            headers: { accessToken: token },
+          })
           .then((response)=> {
             setListOfPosts(listOfPosts.map((post) => {
               if (post.id === post_id) {
@@ -150,7 +164,7 @@ function HomePage() {
                             <label className="label"> {value.Dislikes.length}</label>
                           </div>
                           {listOfUsers.find(item => item.id === value.user_id)?
-                        listOfUsers.find(item => item.id === value.user_id).username===localStorage.getItem("username")?
+                        listOfUsers.find(item => item.id === value.user_id).username===userName?
                         <div className="deleteButton"><button onClick={()=>onDelete(value.id)}>X</button></div>:null
                         :null}
                       </div>

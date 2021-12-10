@@ -3,20 +3,29 @@ import Login from '../Login/Login';
 import axios from 'axios';
 import './Comment.css';
 
+// Custom Hooks
+import useTokenRetriver from '../../utils/tokenRetriver';
+import useUsernameRetriver from '../../utils/usernameRetriver';
+
 function Comment() {
     const [comment, setComment] = useState();
     const [listOfComments, setListOfComments] = useState([]);
     const [listOfUsers, setListOfUsers] = useState([]);
     const [isLogged, setIsLogged] = useState(true);
 
+    const token = useTokenRetriver();
+    const userName = useUsernameRetriver();
+
     const url = window.location.pathname; 
     const id = url.split("/").pop();
 
     const onSumbit = () => {
-        if (localStorage.getItem("accessToken")) {
-            const username = localStorage.getItem("username");
+        if (token) {
+            const username = userName;
             const formData = {"commentBody": comment, "username": username};
-            axios.post(`http://localhost:8080/api/comment/${id}`, formData)
+            axios.post(`http://localhost:8080/api/comment/${id}`, formData, {
+                headers: { accessToken: token },
+              })
             .then((res) => {
                 console.log(res.data);
             });
@@ -28,7 +37,9 @@ function Comment() {
     }
 
     const onDelete = (commentid) => {
-        axios.delete(`http://localhost:8080/api/comment/${commentid}`);
+        axios.delete(`http://localhost:8080/api/comment/${commentid}`, {
+            headers: { accessToken: token },
+          });
         window.location.reload(true);
     }
     
@@ -56,16 +67,17 @@ function Comment() {
             <button onClick={onSumbit}>Comment</button>
 
             {listOfComments.map((value, key) => {
+                const user_id = listOfUsers.find(item => item.id === value.user_id);
                 return (value.post_id===Number(id)?
                     <div className="line"  key={value.id}>
                     <div className="comments" key={value.id}>
                         <div className="commentSection">
-                        {listOfUsers.find(item => item.id === value.user_id)?
-                        <div className="username"><h1>{listOfUsers.find(item => item.id === value.user_id).username}:</h1></div>
+                        {user_id?
+                        <div className="username"><h1>{user_id.username}:</h1></div>
                         : null}
                         <div className="comment"><h4>{value.commentBody}</h4></div>
-                        {listOfUsers.find(item => item.id === value.user_id)?
-                        listOfUsers.find(item => item.id === value.user_id).username===localStorage.getItem("username")?
+                        {user_id?
+                        user_id.username === userName?
                         <div className="deleteButton"><button onClick={()=>onDelete(value.id)}>X</button></div>:null
                         :null}
                         </div>
